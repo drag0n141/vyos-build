@@ -103,6 +103,7 @@ jobs:
               --custom-package "jo" \
               --custom-package "moreutils" \
               --custom-package "tree" \
+              --custom-package "nano" \
               --custom-package "vim"
 
       - name: Rename ISO file
