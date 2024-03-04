@@ -6,6 +6,8 @@
     ":dependencyDashboard",
     ":disableRateLimiting",
     ":semanticCommits"
+    ":automergeDigest",
+    "helpers:pinGitHubActionDigests"
   ],
   "dependencyDashboardTitle": "Renovate Dashboard 🤖",
   "suppressNotifications": ["prEditedNotification", "prIgnoreNotification"],
