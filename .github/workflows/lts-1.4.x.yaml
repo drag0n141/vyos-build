@@ -25,6 +25,8 @@ env:
   SOPS_VERSION: v3.8.1
   # renovate: datasource=github-releases depName=p3lim/vyaml
   VYAML_VERSION: 0.2.6
+  # renovate: datasource=github-releases depName=tailscale/tailscale
+  TAILSCALE_VERSION: 1.60.1
 
 jobs:
   release:
@@ -68,7 +70,7 @@ jobs:
 
       - name: Clone vyos-build
         shell: bash
-        run: git clone --depth=1 --branch ${{ env.VYOS_TAG }} --single-branch ${{ env.VYOS_URL }}
+        run: git clone -b ${{ env.VYOS_TAG }} ${{ env.VYOS_URL }}
 
       - name: Download sops deb
         uses: robinraju/release-downloader@368754b9c6f47c345fcfbf42bcb577c2f0f5f395 # v1.9
@@ -87,6 +89,11 @@ jobs:
           tag: ${{ env.VYAML_VERSION }}
           fileName: "*amd64.deb"
           out-file-path: vyos-build/packages
+
+      - name: Download tailscale deb
+        shell: bash
+        run: |
+          wget "https://pkgs.tailscale.com/stable/debian/pool/tailscale_${TAILSCALE_VERSION}_${VYOS_ARCH}.deb" -P vyos-build/packages
 
       - name: Configure
         shell: bash
