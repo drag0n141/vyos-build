@@ -36,7 +36,7 @@ jobs:
       options: --privileged
     steps:
       - name: Generate Token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@f2acddfb5195534d487896a656232b016a682f3c # v1
         id: app-token
         with:
           app-id: "${{ secrets.BOT_APP_ID }}"
@@ -53,7 +53,7 @@ jobs:
 
       - name: Increment build number
         id: buildnumber
-        uses: action-pack/increment@v2
+        uses: action-pack/increment@9d408039988310d9196f37b82188b7285057a802 # v2
         with:
           name: VYOS_${{ steps.version.outputs.vyos-version-sanitized }}_BUILD
           token: ${{ steps.app-token.outputs.token }}
@@ -71,7 +71,7 @@ jobs:
         run: git clone -b ${{ env.VYOS_TAG }} --depth 1 ${{ env.VYOS_URL }}
 
       - name: Download sops deb
-        uses: robinraju/release-downloader@v1.9
+        uses: robinraju/release-downloader@368754b9c6f47c345fcfbf42bcb577c2f0f5f395 # v1.9
         with:
           repository: getsops/sops
           latest: false
@@ -80,7 +80,7 @@ jobs:
           out-file-path: vyos-build/packages
 
       - name: Download vyaml deb
-        uses: robinraju/release-downloader@v1.9
+        uses: robinraju/release-downloader@368754b9c6f47c345fcfbf42bcb577c2f0f5f395 # v1.9
         with:
           repository: p3lim/vyaml
           latest: false
@@ -110,7 +110,7 @@ jobs:
         run: mv "./vyos-build/build/${{ steps.vars.outputs.generated-iso-name }}.iso" "./vyos-build/build/${{ steps.vars.outputs.target-iso-name }}.iso"
 
       - name: Create release with artifact
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@2c591bcc8ecdcd2db72b97d6147f871fcd833ba5 # v1
         with:
           token: "${{ steps.app-token.outputs.token }}"
           tag: "v${{ steps.vars.outputs.tag-name }}"
@@ -123,7 +123,7 @@ jobs:
 
       - name: Delete orphaned release
         if: "${{ failure() }}"
-        uses: dev-drprasad/delete-tag-and-release@v0.2.1
+        uses: dev-drprasad/delete-tag-and-release@5eafd8668311bf3e4d6c1e9898f32a317103de68 # v0.2.1
         env:
           GITHUB_TOKEN: "${{ steps.app-token.outputs.token }}"
         with:
@@ -132,7 +132,7 @@ jobs:
 
       - name: Decrement build number
         if: "${{ failure() }}"
-        uses: action-pack/increment@v2
+        uses: action-pack/increment@9d408039988310d9196f37b82188b7285057a802 # v2
         with:
           name: VYOS_${{ steps.version.outputs.vyos-version-sanitized }}_BUILD
           token: ${{ steps.app-token.outputs.token }}
