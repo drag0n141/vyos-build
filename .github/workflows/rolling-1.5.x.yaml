@@ -63,7 +63,7 @@ jobs:
       - name: Download tailscale deb
         shell: bash
         run: |
-          curl "https://pkgs.tailscale.com/stable/debian/pool/tailscale_${TAILSCALE_VERSION}_${VYOS_ARCH}.deb" -o vyos-build/packages
+          curl "https://pkgs.tailscale.com/stable/debian/pool/tailscale_${TAILSCALE_VERSION}_${VYOS_ARCH}.deb" --output-dir vyos-build/packages
 
       - name: Configure
         shell: bash
