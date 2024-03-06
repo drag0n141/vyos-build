@@ -1,32 +1,39 @@
 ---
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-name: "VyOS Rolling 1.5.x"
+name: "VyOS Rolling"
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: 0 3 * * *
+    - cron: "0 3 * * *"
 
 env:
   VYOS_URL: https://github.com/vyos/vyos-build
-  VYOS_BRANCH: current
   VYOS_ARCH: amd64
   VYOS_BUILD_TYPE: release
   VYOS_VERSION: 1.5-rolling
   # renovate: datasource=github-releases depName=tailscale/tailscale
   TAILSCALE_VERSION: 1.60.1
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    strategy:
+      matrix:
+        branch: ["current", "sagitta"]
     container:
-      image: vyos/vyos-build:current
+      image: vyos/vyos-build:${{ matrix.branch }}
       options: --privileged
     steps:
       - name: Generate Token
-        uses: actions/create-github-app-token@f2acddfb5195534d487896a656232b016a682f3c # v1
+        uses: actions/create-github-app-token@v1
         id: app-token
         with:
           app-id: "${{ secrets.BOT_APP_ID }}"
@@ -37,15 +44,17 @@ jobs:
         shell: bash
         run: |
           build_date=$(date +%Y%m%d%H%M)
-          echo "tag-name=${{ env.VYOS_VERSION }}-${build_date}" >> "$GITHUB_OUTPUT"
-          echo "iso-name=${{ env.VYOS_VERSION }}-${build_date}-${{ env.VYOS_ARCH }}" >> "$GITHUB_OUTPUT"
+          [[ "${{ matrix.branch }}" == "sagitta" ]] && vyos_version="1.4" || vyos_version="1.5"
+          echo "vyos-version=${vyos_version}" >> "$GITHUB_OUTPUT"
+          echo "tag-name=${vyos_version}-rolling-${build_date}" >> "$GITHUB_OUTPUT"
+          echo "iso-name=${vyos_version}-rolling-${build_date}-${{ env.VYOS_ARCH }}" >> "$GITHUB_OUTPUT"
 
       - name: Clone vyos-build
         shell: bash
-        run: git clone -b ${{ env.VYOS_BRANCH }} --single-branch ${{ env.VYOS_URL }}
+        run: git clone -b ${{ matrix.branch }} --single-branch ${{ env.VYOS_URL }}
 
       - name: Download sops deb
-        uses: robinraju/release-downloader@368754b9c6f47c345fcfbf42bcb577c2f0f5f395 # v1.9
+        uses: robinraju/release-downloader@v1.9
         with:
           repository: getsops/sops
           latest: true
@@ -53,7 +62,7 @@ jobs:
           out-file-path: vyos-build/packages
 
       - name: Download vyaml deb
-        uses: robinraju/release-downloader@368754b9c6f47c345fcfbf42bcb577c2f0f5f395 # v1.9
+        uses: robinraju/release-downloader@v1.9
         with:
           repository: p3lim/vyaml
           latest: true
@@ -83,7 +92,7 @@ jobs:
               --custom-package "vim"
 
       - name: Create release with artifact
-        uses: ncipollo/release-action@2c591bcc8ecdcd2db72b97d6147f871fcd833ba5 # v1
+        uses: ncipollo/release-action@v1
         with:
           token: "${{ steps.app-token.outputs.token }}"
           tag: "v${{ steps.vars.outputs.tag-name }}"
@@ -92,23 +101,13 @@ jobs:
           prerelease: true
           body: |
             Official VyOS Changelog:
-            https://docs.vyos.io/en/latest/changelog/1.5.html
+            https://docs.vyos.io/en/latest/changelog/${{ steps.vars.outputs.vyos-version }}.html
 
       - name: Delete orphaned release
         if: "${{ failure() }}"
-        uses: dev-drprasad/delete-tag-and-release@5eafd8668311bf3e4d6c1e9898f32a317103de68 # v0.2.1
+        uses: dev-drprasad/delete-tag-and-release@v0.2.1
         env:
           GITHUB_TOKEN: "${{ steps.app-token.outputs.token }}"
         with:
           tag_name: "v${{ steps.vars.outputs.tag-name }}"
           delete_release: true
-
-      - name: Prune old releases
-        if: "${{ always() }}"
-        uses: dev-drprasad/delete-older-releases@5494cd8b61c31b3c7a15f6267901195ec7df64e8 # v0.3.2
-        env:
-          GITHUB_TOKEN: "${{ steps.app-token.outputs.token }}"
-        with:
-          keep_latest: 90
-          delete_tags: true
-          delete_tag_pattern: rolling
