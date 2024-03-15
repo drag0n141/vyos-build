@@ -54,7 +54,7 @@ jobs:
 
       - name: Increment build number
         id: build-number
-        uses: action-pack/increment@v2
+        uses: action-pack/increment@9d408039988310d9196f37b82188b7285057a802 # v2
         with:
           name: ${{ steps.version.outputs.vyos-version-key }}
           token: ${{ steps.app-token.outputs.token }}
