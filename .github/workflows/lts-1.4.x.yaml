@@ -48,29 +48,33 @@ jobs:
         id: version
         shell: bash
         run: |
-          VYOS_TAG=${{ env.VYOS_TAG }}
-          VYOS_VERSION=${VYOS_TAG%-*}
-          echo "vyos-version=${VYOS_VERSION}" >> "$GITHUB_OUTPUT"
-          echo "vyos-version-sanitized=${VYOS_VERSION//./_}" >> "$GITHUB_OUTPUT"
+          version=${{ env.VYOS_VERSION }}
+          key=$(echo "${version//[^[:alnum:]]/_}")
+          echo "vyos-version-key=VYOS_${key}_BUILD" >> $GITHUB_OUTPUT
 
       - name: Increment build number
-        id: buildnumber
-        uses: action-pack/increment@9d408039988310d9196f37b82188b7285057a802 # v2
+        id: build-number
+        uses: action-pack/increment@v2
         with:
-          name: VYOS_${{ steps.version.outputs.vyos-version-sanitized }}_BUILD
+          name: ${{ steps.version.outputs.vyos-version-key }}
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup variables
         id: vars
         shell: bash
         run: |
-          echo "tag-name=${{ steps.version.outputs.vyos-version }}+${{ github.repository_owner }}.${{ steps.buildnumber.outputs.value }}" >> "$GITHUB_OUTPUT"
-          echo "generated-iso-name=vyos-${{ steps.version.outputs.vyos-version }}+${{ github.repository_owner }}.${{ steps.buildnumber.outputs.value }}-${{ env.VYOS_ARCH }}" >> "$GITHUB_OUTPUT"
-          echo "target-iso-name=vyos-${{ steps.version.outputs.vyos-version }}+${{ github.repository_owner }}.${{ steps.buildnumber.outputs.value }}.${{ env.VYOS_ARCH }}" >> "$GITHUB_OUTPUT"
+          echo "tag-name=${{ env.VYOS_VERSION }}+${{ github.repository_owner }}.${{ steps.build-number.outputs.value }}" >> $GITHUB_OUTPUT
+          echo "generated-iso-name=vyos-${{ env.VYOS_VERSION }}+${{ github.repository_owner }}.${{ steps.build-number.outputs.value }}-amd64" >> $GITHUB_OUTPUT
+          echo "target-iso-name=vyos-${{ env.VYOS_VERSION }}+${{ github.repository_owner }}.${{ steps.build-number.outputs.value }}.amd64" >> $GITHUB_OUTPUT
 
       - name: Clone vyos-build
         shell: bash
-        run: git clone -b ${{ env.VYOS_TAG }} --depth 1 ${{ env.VYOS_URL }}
+        run: git clone -b ${{ env.VYOS_VERSION }} --depth 1 https://github.com/vyos/vyos-build
+
+      - name: Switch to vyos-build version tag
+        shell: bash
+        working-directory: vyos-build
+        run: git switch -c ${{ env.VYOS_VERSION }}
 
       - name: Download sops deb
         uses: robinraju/release-downloader@368754b9c6f47c345fcfbf42bcb577c2f0f5f395 # v1.9
