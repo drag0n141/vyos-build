@@ -12,7 +12,7 @@ env:
   VYOS_ARCH: amd64
   VYOS_BUILD_TYPE: release
   # renovate: datasource=github-releases depName=tailscale/tailscale
-  TAILSCALE_VERSION: 1.62.0
+  TAILSCALE_VERSION: 1.62.1
 
 
 concurrency:
