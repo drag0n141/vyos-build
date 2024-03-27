@@ -26,7 +26,7 @@ env:
   # renovate: datasource=github-releases depName=p3lim/vyaml
   VYAML_VERSION: 0.2.6
   # renovate: datasource=github-releases depName=tailscale/tailscale
-  TAILSCALE_VERSION: 1.62.0
+  TAILSCALE_VERSION: 1.62.1
 
 jobs:
   release:
